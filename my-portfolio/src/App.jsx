@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, ArrowRight, GitBranch, Terminal, Image as ImageIcon } from 'lucide-react';
-
-// --- API Configuration ---
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { ExternalLink, ArrowRight, GitBranch, Terminal } from 'lucide-react';
 
 // --- Helpers ---
 const renderMarkdown = (content) => {
@@ -13,7 +10,7 @@ const renderMarkdown = (content) => {
     if (line.startsWith('### ')) return <h3 key={i} className="font-semibold text-zinc-300 mt-2 mb-1">{line.replace('### ', '')}</h3>;
     if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc marker:text-zinc-600 mb-1">{line.replace('- ', '')}</li>;
     if (line.trim() === '') return <div key={i} className="h-2"></div>;
-    return <p key={i} className="mb-1 leading-relaxed break-words">{line}</p>;
+    return <p key={i} className="mb-1 leading-relaxed wrap-break-word">{line}</p>;
   });
 };
 
@@ -64,12 +61,12 @@ const Home = ({ posts, onPostClick, statuses, onAddStatus, onDeleteStatus, isAdm
         <section className="md:col-span-3 space-y-6">
           <h2 className="text-lg text-zinc-100 flex items-center gap-2">
             <Terminal size={18} className="text-zinc-500" /> Status Log
-            <div className="h-px bg-zinc-800 flex-grow ml-4"></div>
+            <div className="h-px bg-zinc-800 grow ml-4"></div>
           </h2>
           
           {isAdmin && (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 animate-in fade-in slide-in-from-top-2">
-              <input type="text" value={newStatus} onChange={(e) => setNewStatus(e.target.value)} placeholder="What are you working on?" className="flex-grow bg-[#0f0f0f] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting} />
+              <input type="text" value={newStatus} onChange={(e) => setNewStatus(e.target.value)} placeholder="What are you working on?" className="grow bg-[#0f0f0f] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting} />
               <button type="submit" disabled={isSubmitting} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded text-sm transition-colors disabled:opacity-50">
                 {isSubmitting ? 'Posting...' : 'Post'}
               </button>
@@ -78,7 +75,7 @@ const Home = ({ posts, onPostClick, statuses, onAddStatus, onDeleteStatus, isAdm
 
           {!isAdmin && <p className="text-xs text-zinc-500 italic mb-4">// A personal stream of consciousness and project updates.</p>}
           
-          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px before:h-full before:w-px before:bg-gradient-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
+          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px before:h-full before:w-px before:bg-linear-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
             {statuses.map((status) => (
               <div key={status.id} className="relative flex items-start group">
                 <div className="mt-1.5 flex items-center justify-center w-5 h-5 rounded-full border border-zinc-700 bg-[#0a0a0a] group-hover:border-zinc-500 group-hover:bg-zinc-800 shadow shrink-0 z-10 transition-colors duration-200"></div>
@@ -103,7 +100,7 @@ const Home = ({ posts, onPostClick, statuses, onAddStatus, onDeleteStatus, isAdm
 
         <section className="md:col-span-2 space-y-6">
           <h2 className="text-lg text-zinc-100 flex items-center gap-2">
-            Notes <div className="h-px bg-zinc-800 flex-grow ml-4"></div>
+            Notes <div className="h-px bg-zinc-800 grow ml-4"></div>
           </h2>
           <div className="space-y-4">
             {posts.slice(0, 3).map((post) => (
@@ -126,15 +123,17 @@ const Home = ({ posts, onPostClick, statuses, onAddStatus, onDeleteStatus, isAdm
 const Blog = ({ posts, onPostClick, isAdmin, onAddPost, onDeletePost }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [imageFiles, setImageFiles] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    await onAddPost({ title, content }, imageFiles);
-    setTitle(''); setContent(''); setImageFiles([]);
+    await onAddPost({ title, content }, imageFile);
+    setTitle('');
+    setContent('');
+    setImageFile(null);
     setIsSubmitting(false);
     if (document.getElementById('blog-image-upload')) {
       document.getElementById('blog-image-upload').value = '';
@@ -149,20 +148,16 @@ const Blog = ({ posts, onPostClick, isAdmin, onAddPost, onDeletePost }) => {
         <form onSubmit={handleSubmit} className="mb-12 space-y-4 p-4 md:p-6 border border-zinc-800 rounded-lg bg-[#0f0f0f]">
           <h2 className="text-zinc-200 font-medium mb-4">Create New Note</h2>
           <input type="text" placeholder="Post Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting} />
-          
+
           <div className="relative">
-            <input 
+            <input
               id="blog-image-upload"
-              type="file" 
+              type="file"
               accept="image/*"
-              multiple
-              onChange={(e) => setImageFiles(Array.from(e.target.files))} 
-              className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-400 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 focus:outline-none transition-colors cursor-pointer" 
+              onChange={(e) => setImageFile(e.target.files[0])}
+              className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-400 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 focus:outline-none transition-colors cursor-pointer"
               disabled={isSubmitting}
             />
-            {imageFiles.length > 0 && (
-              <p className="text-xs text-zinc-500 mt-1">{imageFiles.length} image{imageFiles.length > 1 ? 's' : ''} selected</p>
-            )}
           </div>
 
           <textarea placeholder="Write your note here... (Separate paragraphs with a new line)" value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors resize-y" disabled={isSubmitting} />
@@ -183,7 +178,7 @@ const Blog = ({ posts, onPostClick, isAdmin, onAddPost, onDeletePost }) => {
           <div key={post.id} className="group relative border-b border-zinc-900/50 hover:border-zinc-700 transition-colors py-3">
             <button onClick={() => onPostClick(post)} className="w-full text-left flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6">
               <span className="text-zinc-500 text-sm shrink-0 font-mono">{post.fullDate}</span>
-              <span className="text-zinc-300 group-hover:text-white transition-colors flex-grow leading-snug">{post.title}</span>
+              <span className="text-zinc-300 group-hover:text-white transition-colors grow leading-snug">{post.title}</span>
               <span className="text-zinc-600 text-xs hidden sm:block">{post.readTime}</span>
             </button>
             {isAdmin && (
@@ -209,14 +204,9 @@ const BlogPost = ({ post, onBack }) => (
           <span>{post.readTime} read</span>
         </div>
       </header>
-      {/* Support both legacy single imageUrl and new imageUrls array */}
-      {(post.imageUrls || post.imageUrl) && (
-        <div className="mb-8 space-y-4">
-          {(post.imageUrls || [post.imageUrl]).map((url, idx) => (
-            <div key={idx} className="overflow-hidden rounded-lg border border-zinc-800">
-              <img src={url} alt={`${post.title} - ${idx + 1}`} className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-500" />
-            </div>
-          ))}
+      {post.imageUrl && (
+        <div className="mb-8 overflow-hidden rounded-lg border border-zinc-800">
+          <img src={post.imageUrl} alt={post.title} className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-500" />
         </div>
       )}
       <div className="space-y-6 text-zinc-400">
@@ -230,18 +220,21 @@ const Projects = ({ projects, isAdmin, onAddProject, onDeleteProject }) => {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [tags, setTags] = useState('');
-  const [imageFiles, setImageFiles] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !desc.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    const tagArray = tags.split(',').map(t => t.trim()).filter(t => t !== '');
-    
-    await onAddProject({ name, desc, tags: tagArray }, imageFiles);
-    
-    setName(''); setDesc(''); setTags(''); setImageFiles([]);
+    const tagArray = tags.split(',').map((tag) => tag.trim()).filter((tag) => tag !== '');
+
+    await onAddProject({ name, desc, tags: tagArray }, imageFile);
+
+    setName('');
+    setDesc('');
+    setTags('');
+    setImageFile(null);
     setIsSubmitting(false);
     if (document.getElementById('project-image-upload')) {
       document.getElementById('project-image-upload').value = '';
@@ -255,25 +248,21 @@ const Projects = ({ projects, isAdmin, onAddProject, onDeleteProject }) => {
       {isAdmin && (
         <form onSubmit={handleSubmit} className="mb-12 space-y-4 p-4 md:p-6 border border-zinc-800 rounded-lg bg-[#0f0f0f]">
           <h2 className="text-zinc-200 font-medium mb-4">Add New Project</h2>
-          <input type="text" placeholder="Project Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting}/>
-          <input type="text" placeholder="Tags (comma separated, e.g. React, Tailwind, Rust)" value={tags} onChange={(e) => setTags(e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting}/>
-          
+          <input type="text" placeholder="Project Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting} />
+          <input type="text" placeholder="Tags (comma separated, e.g. React, Tailwind, Rust)" value={tags} onChange={(e) => setTags(e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors" disabled={isSubmitting} />
+
           <div className="relative">
-            <input 
+            <input
               id="project-image-upload"
-              type="file" 
+              type="file"
               accept="image/*"
-              multiple
-              onChange={(e) => setImageFiles(Array.from(e.target.files))} 
-              className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-400 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 focus:outline-none transition-colors cursor-pointer" 
+              onChange={(e) => setImageFile(e.target.files[0])}
+              className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-400 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-zinc-300 hover:file:bg-zinc-700 focus:outline-none transition-colors cursor-pointer"
               disabled={isSubmitting}
             />
-            {imageFiles.length > 0 && (
-              <p className="text-xs text-zinc-500 mt-1">{imageFiles.length} image{imageFiles.length > 1 ? 's' : ''} selected</p>
-            )}
           </div>
 
-          <textarea placeholder="Project Description... (Supports markdown like # Header, ## Subhead, - bullets)" value={desc} onChange={(e) => setDesc(e.target.value)} rows={5} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors resize-y font-mono" disabled={isSubmitting}/>
+          <textarea placeholder="Project Description... (Supports markdown like # Header, ## Subhead, - bullets)" value={desc} onChange={(e) => setDesc(e.target.value)} rows={5} className="w-full bg-[#0a0a0a] border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-500 transition-colors resize-y font-mono" disabled={isSubmitting} />
           <div className="flex justify-end">
             <button type="submit" disabled={isSubmitting} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded text-sm transition-colors disabled:opacity-50">
               {isSubmitting ? 'Saving...' : 'Save Project'}
@@ -292,7 +281,6 @@ const Projects = ({ projects, isAdmin, onAddProject, onDeleteProject }) => {
             {isAdmin && (
               <button onClick={() => onDeleteProject(proj.id)} className="absolute top-4 right-4 z-20 text-xs text-red-500/50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0a0a0a] px-2 py-1 rounded border border-zinc-800">Delete</button>
             )}
-            
             <div className="w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
                 <h3 className="text-zinc-200 font-medium group-hover:text-white transition-colors flex items-center gap-2 text-lg">
@@ -301,14 +289,10 @@ const Projects = ({ projects, isAdmin, onAddProject, onDeleteProject }) => {
                 <ArrowRight size={16} className="text-zinc-600 group-hover:text-zinc-300 transition-colors group-hover:translate-x-1 transform duration-200 hidden sm:block" />
               </div>
               
-              {/* Responsive Project Image rendering - supports multiple images */}
-              {(proj.imageUrls || proj.imageUrl) && (
-                <div className="w-full mb-6 space-y-3">
-                  {(proj.imageUrls || [proj.imageUrl]).map((url, idx) => (
-                    <div key={idx} className="rounded-md overflow-hidden border border-zinc-800/50">
-                      <img src={url} alt={`${proj.name} - ${idx + 1}`} className="w-full h-48 sm:h-64 object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                  ))}
+              {/* Responsive Project Image rendering */}
+              {proj.imageUrl && (
+                <div className="w-full mb-6 rounded-md overflow-hidden border border-zinc-800/50">
+                  <img src={proj.imageUrl} alt={proj.name} className="w-full h-48 sm:h-64 object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               )}
 
@@ -361,11 +345,11 @@ const About = () => (
     <p>Aside from tech and staring at terminal screens, I am a huge fan of music and gaming(i've been losing interest of it btw atm).</p>
     
     <section className="mt-16 md:mt-20">
-      <h2 className="text-lg text-zinc-100 mb-6 flex items-center gap-2">Links<div className="h-px bg-zinc-800 flex-grow ml-4"></div></h2>
+      <h2 className="text-lg text-zinc-100 mb-6 flex items-center gap-2">Links<div className="h-px bg-zinc-800 grow ml-4"></div></h2>
       <div className="flex flex-col gap-1 border border-zinc-900 bg-[#0f0f0f] p-4 md:p-6 rounded-lg w-full overflow-hidden">
         <LinkRow platform="Github" value="cxdzy" href="https://github.com/cxdzy" />
         <LinkRow platform="LinkedIn" value="Mohamad Haziq Naqib Zaid" href="https://www.linkedin.com/in/haziqnaqibzaid1174/" />
-        <LinkRow platform="Twitter" value="@haziq_codes" href="https://twitter.com" />
+        <LinkRow platform="Twitter" value="-" href="https://twitter.com" />
         <LinkRow platform="Discord" value="cxdzy" />
         <LinkRow platform="Email" value="h4z1q.n(at)dm4il.com" isHoverable={true} hoverValue="haziqnaqib11@gmail.com" />
       </div>
@@ -380,132 +364,106 @@ export default function App() {
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [activePost, setActivePost] = useState(null);
+  const adminPasscode = import.meta.env.VITE_ADMIN_PASSCODE;
   
   // States initialized as empty arrays
   const [statuses, setStatuses] = useState([]);
   const [posts, setPosts] = useState([]);
   const [projects, setProjects] = useState([]);
-  
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Fetch all data from API on mount
   useEffect(() => {
     setMounted(true);
-    const fetchData = async () => {
-      try {
-        const [statusRes, postsRes, projectsRes] = await Promise.all([
-          fetch(`${API_URL}/api/statuses`),
-          fetch(`${API_URL}/api/posts`),
-          fetch(`${API_URL}/api/projects`)
-        ]);
-        if (statusRes.ok) setStatuses(await statusRes.json());
-        if (postsRes.ok) setPosts(await postsRes.json());
-        if (projectsRes.ok) setProjects(await projectsRes.json());
-      } catch (err) {
-        console.warn('API not reachable, running in offline mode:', err.message);
+    const seedDate = new Date();
+    setStatuses([
+      { id: seedDate.getTime() - 1, date: 'Mar 2026', content: 'Welcome to my Portfolio Page :).' }
+    ]);
+    setPosts([
+      {
+        id: seedDate.getTime() - 2,
+        date: 'Mar 12',
+        fullDate: '2026-03-12',
+        title: 'Fresh Start',
+        readTime: '1 min',
+        imageUrl: null,
+        content: ['This portfolio is now running without Firebase.']
       }
-    };
-    fetchData();
+    ]);
+    setProjects([
+      {
+        id: seedDate.getTime() - 3,
+        name: 'Portfolio',
+        desc: 'Frontend-only setup with local in-memory data.',
+        imageUrl: null,
+        tags: ['React', 'Vite']
+      }
+    ]);
   }, []);
 
   const handleNavClick = (item) => { setCurrentPage(item); setActivePost(null); };
   const handlePostClick = (post) => { setActivePost(post); setCurrentPage('post'); };
 
-  // --- CRUD Operations (via API) ---
+  // Local-only image preview helper.
+  const uploadImageFile = async (file) => {
+    if (!file) return null;
+    return URL.createObjectURL(file);
+  };
+
+
   const handleAddStatus = async (content) => {
-    try {
-      const res = await fetch(`${API_URL}/api/statuses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-      });
-      if (res.ok) {
-        const newStatus = await res.json();
-        setStatuses([newStatus, ...statuses]);
-      }
-    } catch (err) {
-      console.error('Failed to add status:', err);
-    }
+    const payload = { id: Date.now(), date: 'Just now', content };
+    setStatuses([payload, ...statuses]);
   };
 
   const handleDeleteStatus = async (id) => {
-    try {
-      await fetch(`${API_URL}/api/statuses/${id}`, { method: 'DELETE' });
-      setStatuses(statuses.filter(s => s.id !== id));
-    } catch (err) {
-      console.error('Failed to delete status:', err);
-    }
+    setStatuses(statuses.filter((s) => s.id !== id));
   };
 
-  const handleAddPost = async (postData, imageFiles) => {
-    try {
-      const formData = new FormData();
-      formData.append('title', postData.title);
-      formData.append('content', postData.content);
-      for (const file of imageFiles) {
-        formData.append('images', file);
-      }
+  const handleAddPost = async (postData, imageFile) => {
+    const today = new Date();
+    
+    // Upload image first if it exists
+    const uploadedImageUrl = await uploadImageFile(imageFile);
 
-      const res = await fetch(`${API_URL}/api/posts`, {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const newPost = await res.json();
-        setPosts([newPost, ...posts]);
-      }
-    } catch (err) {
-      console.error('Failed to add post:', err);
-    }
+    const payload = {
+      id: Date.now(),
+      date: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      fullDate: today.toISOString().split('T')[0],
+      title: postData.title,
+      readTime: '1 min',
+      imageUrl: uploadedImageUrl || null,
+      content: postData.content.split('\n').filter(p => p.trim() !== '') 
+    };
+    setPosts([payload, ...posts]);
   };
 
   const handleDeletePost = async (id) => {
-    try {
-      await fetch(`${API_URL}/api/posts/${id}`, { method: 'DELETE' });
-      setPosts(posts.filter(p => p.id !== id));
-      if (activePost && activePost.id === id) { setCurrentPage('blog'); setActivePost(null); }
-    } catch (err) {
-      console.error('Failed to delete post:', err);
-    }
+    setPosts(posts.filter((p) => p.id !== id));
+    if (activePost && activePost.id === id) { setCurrentPage('blog'); setActivePost(null); }
   };
 
-  const handleAddProject = async (projectData, imageFiles) => {
-    try {
-      const formData = new FormData();
-      formData.append('name', projectData.name);
-      formData.append('desc', projectData.desc);
-      formData.append('tags', projectData.tags.join(','));
-      for (const file of imageFiles) {
-        formData.append('images', file);
-      }
+  const handleAddProject = async (projectData, imageFile) => {
+    // Upload image first if it exists
+    const uploadedImageUrl = await uploadImageFile(imageFile);
 
-      const res = await fetch(`${API_URL}/api/projects`, {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const newProject = await res.json();
-        setProjects([newProject, ...projects]);
-      }
-    } catch (err) {
-      console.error('Failed to add project:', err);
-    }
+    const payload = { 
+      id: Date.now(), 
+      ...projectData,
+      imageUrl: uploadedImageUrl || null
+    };
+    
+    setProjects([payload, ...projects]);
   };
 
   const handleDeleteProject = async (id) => {
-    try {
-      await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE' });
-      setProjects(projects.filter(p => p.id !== id));
-    } catch (err) {
-      console.error('Failed to delete project:', err);
-    }
+    setProjects(projects.filter((p) => p.id !== id));
   };
 
   const handleAdminToggle = () => {
     if (isAdmin) setIsAdmin(false);
     else {
-      const passcode = window.prompt("sudo -v");
-      if (passcode && passcode === import.meta.env.VITE_ADMIN_PASSCODE) setIsAdmin(true);
+      const passcode = window.prompt('sudo -v');
+      if (adminPasscode && passcode === adminPasscode) setIsAdmin(true);
     }
   };
 
